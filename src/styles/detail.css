@@ -1,0 +1,9 @@
+.detail-head { padding: 8px 0 16px; border-bottom: 1px solid var(--line); }
+.detail-seal { margin-bottom: 12px; }
+.detail-title { font-size: 22px; line-height: 1.5; }
+.detail-meta { color: var(--ink-3); font-size: 12px; margin: 6px 0 0; }
+.detail-desc { color: var(--ink-2); font-size: 14px; margin: 16px 0; }
+.detail-tags { margin: 12px 0; }
+.detail-actions { margin-top: 20px; }
+.detail-subactions { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }
+.hide-btn { color: var(--ink-3); }
