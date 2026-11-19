@@ -1,0 +1,6 @@
+.daily { border: 1px solid var(--line); background: var(--paper-2); padding: 18px; margin-top: 16px; }
+.daily-label { display: block; font-size: 11px; letter-spacing: 0.3em; color: var(--cinnabar); }
+.daily-course-title { display: block; font-family: var(--font-serif); font-size: 18px; font-weight: 600; margin-top: 6px; line-height: 1.5; }
+.question { font-family: var(--font-serif); font-size: 15px; margin: 8px 0; }
+.answer { background: var(--paper); border-left: 2px solid var(--cinnabar); padding: 10px 12px; font-size: 13px; color: var(--ink-2); margin-top: 8px; }
+.feed-hint { text-align: center; margin: 24px 0 8px; }
