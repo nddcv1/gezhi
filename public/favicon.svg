@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64">
+  <rect width="64" height="64" fill="#F7F4EE"/>
+  <rect x="13" y="13" width="38" height="38" fill="none" stroke="#8C2F28" stroke-width="2"/>
+  <text x="50%" y="28.96" text-anchor="middle" font-family="SimSun, serif" font-weight="bold" font-size="13" fill="#8C2F28">格</text>
+  <text x="50%" y="46.06" text-anchor="middle" font-family="SimSun, serif" font-weight="bold" font-size="13" fill="#8C2F28">致</text>
+</svg>
