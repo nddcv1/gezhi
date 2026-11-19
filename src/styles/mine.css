@@ -1,0 +1,8 @@
+.mine-nav { display: flex; gap: 12px; margin: 8px 0 4px; }
+.mine-nav a { border: 1px solid var(--line); padding: 10px 18px; border-radius: var(--radius); font-size: 14px; color: var(--ink-2); }
+.mine-list { border-top: 1px solid var(--line); }
+.mine-row { display: flex; align-items: center; gap: 12px; padding: 13px 4px; border-bottom: 1px solid var(--line); }
+.mine-row-title { flex: 1; font-size: 14px; line-height: 1.45; }
+.mine-row-date { color: var(--ink-3); font-size: 11px; white-space: nowrap; }
+.small-seal { width: 24px; height: 24px; font-size: 13px; flex: none; }
+.about { color: var(--ink-3); font-size: 12px; line-height: 1.9; }

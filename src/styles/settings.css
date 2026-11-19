@@ -1,0 +1,4 @@
+.field-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.switch { width: 20px; height: 20px; accent-color: var(--cinnabar); }
+.test-btn, .restore-btn { margin-top: 16px; }
+.settings-hint { color: var(--ink-3); font-size: 12px; line-height: 1.8; margin: 12px 0; }
