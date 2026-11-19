@@ -21,6 +21,7 @@ export function StoreProvider({ children, initialPrefs }: { children: ReactNode;
   const [prefs, setPrefs] = useState<Prefs>(initialPrefs ?? defaultPrefs())
   const [ready, setReady] = useState(Boolean(initialPrefs))
   const loaded = useRef(false)
+  const saveEnabled = useRef(Boolean(initialPrefs))
 
   useEffect(() => {
     if (loaded.current || initialPrefs) return
@@ -28,17 +29,21 @@ export function StoreProvider({ children, initialPrefs }: { children: ReactNode;
     loadPrefs()
       .then(p => {
         setPrefs(p)
+        saveEnabled.current = true
         setReady(true)
       })
       .catch(() => setReady(true))
   }, [initialPrefs])
 
   useEffect(() => {
-    if (!ready) return
+    if (!ready || !saveEnabled.current) return
     void savePrefs(prefs).catch(() => undefined)
   }, [prefs, ready])
 
-  const update = useCallback((fn: (p: Prefs) => Prefs) => setPrefs(fn), [])
+  const update = useCallback((fn: (p: Prefs) => Prefs) => {
+    saveEnabled.current = true
+    setPrefs(fn)
+  }, [])
 
   const value: StoreValue = {
     prefs,

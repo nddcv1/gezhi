@@ -1,4 +1,5 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { App as CapApp } from '@capacitor/app'
 import { Capacitor } from '@capacitor/core'
 import { LocalNotifications } from '@capacitor/local-notifications'
 import { StoreProvider, useStore } from './lib/store'
@@ -17,6 +18,11 @@ import { SettingsPage } from './pages/SettingsPage'
 function Shell() {
   const { prefs, ready } = useStore()
   const [route, setRoute] = useState<Route>(() => parseRoute(location.hash))
+  const routeRef = useRef<Route>(route)
+
+  useEffect(() => {
+    routeRef.current = route
+  }, [route])
 
   useEffect(() => {
     const onHash = () => {
@@ -25,6 +31,18 @@ function Shell() {
     }
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
+  }, [])
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return
+    const listener = CapApp.addListener('backButton', ({ canGoBack }) => {
+      if (canGoBack) window.history.back()
+      else if (routeRef.current.name !== 'today') navigate({ name: 'today' })
+      else void CapApp.exitApp()
+    })
+    return () => {
+      void listener.then(h => h.remove())
+    }
   }, [])
 
   useEffect(() => {

@@ -17,6 +17,21 @@ export function notificationId(d: Date): number {
   return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate()
 }
 
+export type PermissionStatus = 'granted' | 'denied' | 'prompt' | 'unknown'
+
+export async function getPermissionStatus(): Promise<PermissionStatus> {
+  if (!Capacitor.isNativePlatform()) return 'unknown'
+  try {
+    const { display } = await LocalNotifications.checkPermissions()
+    if (display === 'granted') return 'granted'
+    if (display === 'denied') return 'denied'
+    if (display.startsWith('prompt')) return 'prompt'
+    return 'unknown'
+  } catch {
+    return 'unknown'
+  }
+}
+
 export async function ensurePermission(): Promise<boolean> {
   if (!Capacitor.isNativePlatform()) return false
   const current = await LocalNotifications.checkPermissions()

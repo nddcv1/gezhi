@@ -9,14 +9,24 @@ export function Onboarding() {
 
   async function enable() {
     setBusy(true)
-    const granted = await ensurePermission()
-    if (granted) {
-      await ensureExactAlarm()
-      updateSettings({ notifyEnabled: true })
-      await rescheduleDaily({ ...prefs.settings, notifyEnabled: true }).catch(() => undefined)
+    try {
+      let granted = false
+      try {
+        granted = await ensurePermission()
+      } catch {
+        granted = false
+      }
+      if (granted) {
+        await ensureExactAlarm()
+        updateSettings({ notifyEnabled: true })
+        await rescheduleDaily({ ...prefs.settings, notifyEnabled: true }).catch(() => undefined)
+      } else {
+        updateSettings({ notifyEnabled: false })
+      }
+    } finally {
+      setBusy(false)
+      completeOnboarding()
     }
-    setBusy(false)
-    completeOnboarding()
   }
 
   function skip() {
