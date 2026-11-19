@@ -57,10 +57,10 @@ export function SettingsPage() {
     updateSettings({ notifyEnabled: false })
     try {
       await cancelDaily()
+      setMessage('已关闭每日提醒。')
     } catch {
-      // 取消失败不影响开关状态
+      setMessage('提醒设置已关闭，但取消已排期通知失败，请检查通知权限后重试。')
     }
-    setMessage('已关闭每日提醒。')
     await refreshPermission()
   }
 
