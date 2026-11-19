@@ -1,0 +1,11 @@
+.subject-list { border-top: 1px solid var(--line); }
+.subject-row { display: flex; align-items: center; gap: 14px; padding: 16px 4px; border-bottom: 1px solid var(--line); }
+.subject-name { font-family: var(--font-serif); font-size: 17px; font-weight: 600; flex: 1; }
+.subject-count { color: var(--ink-3); font-size: 12px; }
+.subject-arrow { color: var(--ink-3); }
+.subject-row-math { background: linear-gradient(90deg, var(--math) 0%, transparent 60%); }
+.subject-row-physics { background: linear-gradient(90deg, var(--physics) 0%, transparent 60%); }
+.subject-row-cs { background: linear-gradient(90deg, var(--cs) 0%, transparent 60%); }
+.subject-row-econ { background: linear-gradient(90deg, var(--econ) 0%, transparent 60%); }
+.subject-row-philosophy { background: linear-gradient(90deg, var(--philosophy) 0%, transparent 60%); }
+.subject-row-humanities { background: linear-gradient(90deg, var(--humanities) 0%, transparent 60%); }
