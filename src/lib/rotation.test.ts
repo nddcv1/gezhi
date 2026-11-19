@@ -2,11 +2,50 @@ import { describe, expect, it } from 'vitest'
 import {
   dailyCourse, dailyFeed, dailyQuestion, daySeed, mulberry32, noTriples, preferredSubjects, seededShuffle,
 } from './rotation'
+import type { Prefs } from './types'
 import { defaultPrefs } from './prefs'
+import { builtinItems } from '../data'
 import { makeItems, sampleQuestions } from '../test/fixtures'
 
 const dateA = new Date(2026, 10, 19)
 const dateB = new Date(2026, 10, 20)
+
+const sweepDate = (day: number) => new Date(2026, 0, 1 + day)
+
+const mathIds = builtinItems.filter(item => item.subject === 'math').map(item => item.id)
+const physicsIds = builtinItems.filter(item => item.subject === 'physics').map(item => item.id)
+const csIds = builtinItems.filter(item => item.subject === 'cs').map(item => item.id)
+
+function tripleViolations(prefs: Prefs): string[] {
+  const bad: string[] = []
+  for (let day = 0; day < 365; day++) {
+    const feed = dailyFeed(builtinItems, prefs, sweepDate(day))
+    if (feed.length !== builtinItems.length) {
+      bad.push(`day ${day}: feed length ${feed.length}`)
+      continue
+    }
+    for (let i = 2; i < feed.length; i++) {
+      if (feed[i].subject === feed[i - 1].subject && feed[i].subject === feed[i - 2].subject) {
+        bad.push(`day ${day}: triple ${feed[i].subject} ending at index ${i}`)
+      }
+    }
+  }
+  return bad
+}
+
+function promotionViolations(prefs: Prefs, subjects: ReadonlySet<string>): string[] {
+  const bad: string[] = []
+  for (let day = 0; day < 365; day++) {
+    const feed = dailyFeed(builtinItems, prefs, sweepDate(day))
+    const half = Math.ceil(feed.length / 2)
+    for (let i = half; i < feed.length; i++) {
+      if (subjects.has(feed[i].subject)) {
+        bad.push(`day ${day}: ${feed[i].subject} at index ${i} (half ${half})`)
+      }
+    }
+  }
+  return bad
+}
 
 describe('daySeed', () => {
   it('is 0 on the epoch day and increments daily', () => {
@@ -39,6 +78,15 @@ describe('noTriples', () => {
     for (let i = 2; i < out.length; i++) {
       const triple = out[i] === out[i - 1] && out[i] === out[i - 2]
       expect(triple).toBe(false)
+    }
+  })
+
+  it('avoids a late run when a valid ordering exists', () => {
+    const items = ['a', 'b', 'a', 'b', 'c', 'c', 'c']
+    const out = noTriples(items, x => x)
+    expect([...out].sort()).toEqual([...items].sort())
+    for (let i = 2; i < out.length; i++) {
+      expect(out[i] === out[i - 1] && out[i] === out[i - 2]).toBe(false)
     }
   })
 })
@@ -92,6 +140,40 @@ describe('dailyFeed', () => {
   it('dailyCourse returns the first feed item', () => {
     const feed = dailyFeed(items, defaultPrefs(), dateA)
     expect(dailyCourse(items, defaultPrefs(), dateA)?.id).toBe(feed[0].id)
+  })
+})
+
+describe('365-day sweep on the built-in corpus', () => {
+  const mathOnly: Prefs = { ...defaultPrefs(), bookmarks: mathIds }
+  const mathPhysicsCs: Prefs = {
+    ...defaultPrefs(),
+    bookmarks: [...mathIds, ...physicsIds, ...csIds],
+  }
+
+  it('keeps runs at most two with default prefs', () => {
+    expect(tripleViolations(defaultPrefs())).toEqual([])
+  })
+
+  it('keeps runs at most two with math bookmarked', () => {
+    expect(tripleViolations(mathOnly)).toEqual([])
+  })
+
+  it('keeps runs at most two with math+physics+cs bookmarked', () => {
+    expect(tripleViolations(mathPhysicsCs)).toEqual([])
+  })
+
+  it('promotes every math item into the first half', () => {
+    expect(promotionViolations(mathOnly, new Set(['math']))).toEqual([])
+  })
+
+  it('promotes every preferred item at the exact-half boundary', () => {
+    expect(promotionViolations(mathPhysicsCs, new Set(['math', 'physics', 'cs']))).toEqual([])
+  })
+
+  it('is deterministic and date-sensitive on the built-in corpus', () => {
+    const first = dailyFeed(builtinItems, mathPhysicsCs, dateA).map(i => i.id)
+    expect(dailyFeed(builtinItems, mathPhysicsCs, dateA).map(i => i.id)).toEqual(first)
+    expect(dailyFeed(builtinItems, mathPhysicsCs, dateB).map(i => i.id)).not.toEqual(first)
   })
 })
 

@@ -27,17 +27,64 @@ export function seededShuffle<T>(items: readonly T[], rng: () => number): T[] {
   return arr
 }
 
-export function noTriples<T>(items: readonly T[], key: (t: T) => string): T[] {
-  const remaining = [...items]
-  const out: T[] = []
-  while (remaining.length > 0) {
-    let pick = 0
-    const n = out.length
-    if (n >= 2 && key(out[n - 1]) === key(out[n - 2])) {
-      const k = remaining.findIndex(t => key(t) !== key(out[n - 1]))
-      if (k >= 0) pick = k
+// Groups items into per-key queues, preserving each key's input order. Map
+// insertion order records the first appearance of every key, which is the
+// deterministic tie-breaker used below.
+function buildQueues<T>(items: readonly T[], key: (t: T) => string): Map<string, T[]> {
+  const queues = new Map<string, T[]>()
+  for (const item of items) {
+    const k = key(item)
+    const bucket = queues.get(k)
+    if (bucket) bucket.push(item)
+    else queues.set(k, [item])
+  }
+  return queues
+}
+
+// Picks the allowed key with the most items left that is not the blocked key.
+// Ties go to the key whose first appearance in the input comes first, thanks
+// to Map insertion order and the strict comparison. Returns null when no
+// allowed unblocked key has items left.
+function pickLargest<T>(
+  queues: Map<string, T[]>,
+  blocked: string | null,
+  allowed?: (key: string) => boolean,
+): string | null {
+  let best: string | null = null
+  let bestCount = 0
+  for (const [k, bucket] of queues) {
+    if (bucket.length === 0 || k === blocked) continue
+    if (allowed && !allowed(k)) continue
+    if (bucket.length > bestCount) {
+      best = k
+      bestCount = bucket.length
     }
-    out.push(remaining.splice(pick, 1)[0])
+  }
+  return best
+}
+
+// Deterministic fallback for infeasible inputs: append every remaining queue
+// in insertion order, keeping each queue's input order.
+function drainRemaining<T>(queues: Map<string, T[]>, out: T[]): void {
+  for (const bucket of queues.values()) {
+    while (bucket.length > 0) out.push(bucket.shift() as T)
+  }
+}
+
+export function noTriples<T>(items: readonly T[], key: (t: T) => string): T[] {
+  const queues = buildQueues(items, key)
+  const out: T[] = []
+  while (out.length < items.length) {
+    const n = out.length
+    const blocked = n >= 2 && key(out[n - 1]) === key(out[n - 2]) ? key(out[n - 1]) : null
+    const chosen = pickLargest(queues, blocked)
+    if (chosen === null) {
+      // Infeasible input: only items sharing the blocked key remain, so a
+      // final run of three is unavoidable; keep every item deterministically.
+      drainRemaining(queues, out)
+      break
+    }
+    out.push(queues.get(chosen)!.shift() as T)
   }
   return out
 }
@@ -50,22 +97,31 @@ export function preferredSubjects(items: readonly VideoItem[], prefs: Prefs): Se
 export function dailyFeed(items: readonly VideoItem[], prefs: Prefs, date: Date): VideoItem[] {
   const shuffled = seededShuffle(items, mulberry32(daySeed(date)))
   const preferred = preferredSubjects(items, prefs)
-  const promoted: VideoItem[] = []
-  const others: VideoItem[] = []
-  for (const item of shuffled) {
-    if (preferred.has(item.subject)) promoted.push(item)
-    else others.push(item)
-  }
+  const queues = buildQueues(shuffled, item => item.subject)
   const half = Math.ceil(shuffled.length / 2)
-  const result: VideoItem[] = []
-  let p = 0
-  let o = 0
-  for (let idx = 0; idx < shuffled.length; idx++) {
-    if (idx < half && p < promoted.length) result.push(promoted[p++])
-    else if (o < others.length) result.push(others[o++])
-    else result.push(promoted[p++])
+  const out: VideoItem[] = []
+  while (out.length < shuffled.length) {
+    const n = out.length
+    const blocked = n >= 2 && out[n - 1].subject === out[n - 2].subject ? out[n - 1].subject : null
+    let chosen: string | null
+    if (n < half) {
+      // First half: take preferred subjects whenever one is available and not
+      // blocked; a non-preferred subject is only a spacer when every remaining
+      // preferred key is blocked.
+      chosen = pickLargest(queues, blocked, k => preferred.has(k as SubjectId))
+      if (chosen === null) chosen = pickLargest(queues, blocked)
+    } else {
+      chosen = pickLargest(queues, blocked)
+    }
+    if (chosen === null) {
+      // Infeasible input (only blocked-key items remain): append the rest in
+      // deterministic order so no item is lost.
+      drainRemaining(queues, out)
+      break
+    }
+    out.push(queues.get(chosen)!.shift() as VideoItem)
   }
-  return noTriples(result, i => i.subject)
+  return out
 }
 
 export function dailyCourse(items: readonly VideoItem[], prefs: Prefs, date: Date): VideoItem | null {
