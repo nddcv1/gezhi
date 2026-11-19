@@ -1,0 +1,21 @@
+:root {
+  --paper: #F7F4EE;
+  --paper-2: #FBF9F4;
+  --ink: #1F1B16;
+  --ink-2: #5A5248;
+  --ink-3: #8A8175;
+  --line: #DED7C9;
+  --cinnabar: #8C2F28;
+  --cinnabar-weak: #B55A4F;
+  --ok: #3E5C46;
+  --math: #EFE7DA;
+  --physics: #E7EBE3;
+  --cs: #E4E9EC;
+  --econ: #EFE4DC;
+  --philosophy: #E9E4EC;
+  --humanities: #EAE7DF;
+  --font-serif: 'Noto Serif SC', 'Songti SC', 'SimSun', serif;
+  --font-ui: system-ui, -apple-system, 'HarmonyOS Sans SC', 'PingFang SC', sans-serif;
+  --radius: 2px;
+  --page-pad: 20px;
+}

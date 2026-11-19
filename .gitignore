@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.venv-tools/
+.cache/
+.keys/
+android/.gradle/
+android/local.properties
+android/app/gezhi-release.keystore
+*.log
