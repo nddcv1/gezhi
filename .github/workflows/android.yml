@@ -59,6 +59,15 @@ jobs:
           else
             echo "no keystore secret, falling back to debug signing"
           fi
+      - name: Probe Maven repositories
+        run: |
+          for url in \
+            "https://dl.google.com/dl/android/maven2/com/android/tools/build/gradle/8.7.2/gradle-8.7.2.pom" \
+            "https://repo.maven.apache.org/maven2/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.9.20/kotlin-stdlib-jdk8-1.9.20.pom" \
+            "https://repo1.maven.org/maven2/org/jetbrains/kotlin/kotlin-stdlib-jdk8/1.9.20/kotlin-stdlib-jdk8-1.9.20.pom"; do
+            code=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 30 "$url" || echo "curl-failed")
+            echo "$code  $url"
+          done
       - name: Build APK
         working-directory: android
         env:
@@ -69,7 +78,7 @@ jobs:
           GEZHI_VERSION_CODE: ${{ github.run_number }}
         run: |
           chmod +x gradlew
-          ./gradlew assembleRelease
+          ./gradlew assembleRelease --stacktrace || ./gradlew assembleRelease --stacktrace
       - uses: actions/upload-artifact@v4
         with:
           name: gezhi-apk
