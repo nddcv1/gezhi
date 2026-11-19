@@ -1,7 +1,11 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { StoreProvider } from './lib/store'
-import { parseRoute, type Route } from './lib/router'
+import { Capacitor } from '@capacitor/core'
+import { LocalNotifications } from '@capacitor/local-notifications'
+import { StoreProvider, useStore } from './lib/store'
+import { parseRoute, navigate, type Route } from './lib/router'
+import { rescheduleDaily } from './lib/notify'
 import { TabBar } from './components/TabBar'
+import { Onboarding } from './components/Onboarding'
 import { TodayPage } from './pages/TodayPage'
 import { SubjectsPage } from './pages/SubjectsPage'
 import { SubjectPage } from './pages/SubjectPage'
@@ -11,6 +15,7 @@ import { AddItemPage } from './pages/AddItemPage'
 import { SettingsPage } from './pages/SettingsPage'
 
 function Shell() {
+  const { prefs, ready } = useStore()
   const [route, setRoute] = useState<Route>(() => parseRoute(location.hash))
 
   useEffect(() => {
@@ -21,6 +26,20 @@ function Shell() {
     window.addEventListener('hashchange', onHash)
     return () => window.removeEventListener('hashchange', onHash)
   }, [])
+
+  useEffect(() => {
+    if (!ready || !Capacitor.isNativePlatform()) return
+    if (prefs.onboarded && prefs.settings.notifyEnabled) {
+      void rescheduleDaily(prefs.settings).catch(() => undefined)
+    }
+    const listener = LocalNotifications.addListener('localNotificationActionPerformed', () => {
+      navigate({ name: 'today' })
+    })
+    return () => {
+      void listener.then(h => h.remove())
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready])
 
   let page: ReactNode
   switch (route.name) {
@@ -43,6 +62,7 @@ function Shell() {
     <div className="app">
       <main className="app-main">{page}</main>
       {active && <TabBar active={active} />}
+      {ready && !prefs.onboarded && <Onboarding />}
     </div>
   )
 }
